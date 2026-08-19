@@ -1,0 +1,14 @@
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+.vscode/
+.idea/
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+data/
+backups/
+secrets/
