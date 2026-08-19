@@ -1,0 +1,71 @@
+apiVersion: openbiz.io/v1alpha1
+kind: GovernancePolicySet
+metadata:
+  name: default-human-oversight
+spec:
+  actionModes:
+    - auto
+    - notify
+    - approve
+    - human
+    - deny
+
+  defaults:
+    write: approve
+    destructive: human
+    financial: approve
+    read: auto
+
+  policies:
+    - id: finance-payment
+      capability: payment.execute
+      agents: [agent.finance]
+      mode: approve
+      approvers: [business-owner, finance-manager]
+      constraints:
+        maximumProposalAmount: 5000
+
+    - id: sales-standard-discount
+      capability: quote.discount
+      agents: [agent.sales]
+      mode: auto
+      constraints:
+        maximumPercent: 10
+
+    - id: sales-exception-discount
+      capability: quote.discount
+      agents: [agent.sales]
+      mode: approve
+      constraints:
+        minimumPercentExclusive: 10
+      approvers: [business-owner, sales-manager]
+
+    - id: contract-signing
+      capability: contract.sign
+      agents: ["*"]
+      mode: human
+
+    - id: destructive-record-delete
+      capability: records.delete
+      agents: ["*"]
+      mode: approve
+      approvers: [business-owner]
+
+    - id: support-routine-reply
+      capability: communications.send
+      agents: [agent.support]
+      mode: notify
+      constraints:
+        channel: support
+
+    - id: procurement-payment-deny
+      capability: payment.execute
+      agents: [agent.procurement]
+      mode: deny
+
+  audit:
+    recordPolicyDecision: true
+    recordToolArguments: true
+    recordApproval: true
+    recordExecutionResult: true
+    correlationIdRequired: true
