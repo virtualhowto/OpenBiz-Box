@@ -1,0 +1,70 @@
+apiVersion: openbiz.io/v1alpha1
+kind: BusinessPack
+metadata:
+  name: general-business
+  displayName: General Small Business
+  version: 0.1.0
+spec:
+  description: Core operating stack for a typical small business.
+
+  capabilities:
+    required:
+      - identity
+      - automation
+      - monitoring
+      - backup
+      - crm
+      - finance
+      - documents
+      - knowledge
+      - customer-communications
+      - signatures
+      - scheduling
+      - pdf-tools
+      - ai-chat
+      - ai-voice
+    optional:
+      - time-tracking
+      - asset-management
+      - email-marketing
+      - inventory
+      - project-management
+
+  preferredModules:
+    identity: authentik
+    automation: n8n
+    monitoring: uptime-kuma
+    crm: erpnext
+    finance: erpnext
+    documents: nextcloud
+    office: onlyoffice
+    knowledge: bookstack
+    customer-communications: chatwoot
+    signatures: documenso
+    scheduling: calcom
+    pdf-tools: stirling-pdf
+    time-tracking: kimai
+    asset-management: snipe-it
+    email-marketing: listmonk
+    ai-gateway: litellm
+    ai-knowledge: qdrant
+    ai-voice: openbiz-voice
+
+  agents:
+    - business-assistant
+    - daily-briefing
+    - sales-assistant
+    - customer-service-assistant
+
+  voice:
+    enabled: true
+    allowToolCalling: true
+    requireAuthenticatedIdentity: true
+
+  workflows:
+    - lead-to-customer
+    - quote-to-project
+    - contract-signing
+    - customer-onboarding
+    - invoice-follow-up
+    - daily-business-briefing
