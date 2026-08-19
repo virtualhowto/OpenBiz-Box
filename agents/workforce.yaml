@@ -1,0 +1,96 @@
+apiVersion: openbiz.io/v1alpha1
+kind: Workforce
+metadata:
+  name: default-ai-workforce
+spec:
+  humanAuthority:
+    ultimateAuthority: business-owner
+    emergencyStop: true
+
+  agents:
+    - id: agent.chief-of-staff
+      displayName: Chief of Staff
+      purpose: Coordinate business priorities, brief the owner and delegate work to specialist agents.
+      defaultActionMode: approve
+      monthlyAIBudget: 100
+      tools:
+        - business.read
+        - workforce.delegate
+        - approvals.read
+        - workflow.start
+
+    - id: agent.sales
+      displayName: Sales Agent
+      purpose: Qualify opportunities, maintain CRM records, prepare quotes and progress approved sales activity.
+      defaultActionMode: approve
+      monthlyAIBudget: 100
+      tools:
+        - crm.read
+        - crm.write
+        - quote.prepare
+        - communications.draft
+        - scheduling.create
+
+    - id: agent.finance
+      displayName: Finance Agent
+      purpose: Monitor receivables, prepare finance actions and surface exceptions for human approval.
+      defaultActionMode: approve
+      monthlyAIBudget: 75
+      tools:
+        - finance.read
+        - invoice.prepare
+        - receivables.followup
+        - payment.propose
+
+    - id: agent.operations
+      displayName: Operations Agent
+      purpose: Coordinate delivery, projects, workload and operational exceptions.
+      defaultActionMode: approve
+      monthlyAIBudget: 100
+      tools:
+        - projects.read
+        - projects.write
+        - workflow.start
+        - communications.draft
+
+    - id: agent.support
+      displayName: Support Agent
+      purpose: Triage customer requests, answer known questions and escalate appropriately.
+      defaultActionMode: notify
+      monthlyAIBudget: 100
+      tools:
+        - support.read
+        - support.write
+        - knowledge.read
+        - communications.send
+
+    - id: agent.marketing
+      displayName: Marketing Agent
+      purpose: Prepare campaigns, content and customer communications within brand and approval policy.
+      defaultActionMode: approve
+      monthlyAIBudget: 75
+      tools:
+        - crm.read
+        - marketing.prepare
+        - communications.draft
+
+    - id: agent.procurement
+      displayName: Procurement Agent
+      purpose: Prepare purchasing activity and monitor supplier requirements without autonomous payment authority.
+      defaultActionMode: approve
+      monthlyAIBudget: 50
+      tools:
+        - suppliers.read
+        - purchase.prepare
+        - inventory.read
+
+    - id: agent.it-security
+      displayName: IT & Security Agent
+      purpose: Monitor platform health and security, investigate events and propose remediation.
+      defaultActionMode: approve
+      monthlyAIBudget: 75
+      tools:
+        - monitoring.read
+        - security.read
+        - assets.read
+        - remediation.propose
