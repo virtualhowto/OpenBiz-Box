@@ -1,0 +1,58 @@
+apiVersion: openbiz.io/v1alpha1
+kind: BusinessPack
+metadata:
+  name: msp
+  displayName: MSP / IT Provider
+  version: 0.1.0
+spec:
+  extends: general-business
+  description: OpenBiz operating model for managed service and IT providers.
+
+  capabilities:
+    required:
+      - service-desk
+      - endpoint-management
+      - security-monitoring
+      - infrastructure-inventory
+      - customer-environments
+      - sla-management
+      - managed-service-reporting
+    optional:
+      - vulnerability-management
+      - backup-monitoring
+      - network-monitoring
+      - m365-management
+      - finops
+      - vciso
+
+  preferredModules:
+    service-desk: zammad
+    endpoint-management: tactical-rmm
+    remote-access: meshcentral
+    security-monitoring: wazuh
+    infrastructure-inventory: netbox
+    asset-management: snipe-it
+
+  agents:
+    - service-desk-agent
+    - noc-agent
+    - security-agent
+    - customer-success-agent
+    - msp-daily-briefing
+
+  voice:
+    enabled: true
+    exampleIntents:
+      - list-priority-incidents
+      - overnight-noc-briefing
+      - failed-backups
+      - customer-health
+      - draft-customer-update
+
+  workflows:
+    - alert-to-incident
+    - customer-onboarding
+    - customer-offboarding
+    - incident-communications
+    - sla-escalation
+    - monthly-service-report
