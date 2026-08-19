@@ -4,13 +4,13 @@
 
 ### Open Business in a Box
 
-**Run your business. Own your stack. Talk to your business.**
+**Run your business. Own your stack. Manage your AI staff.**
 
-An open-source, self-hostable business operating platform that brings together the software a small business needs — with automation, AI and real-time voice built into the core.
+An open-source, self-hostable **human-governed autonomous business platform** where AI staff can operate the business while people retain control over goals, policy, approvals, money and exceptions.
 
-**Web · CRM · Finance · Files · Projects · Support · Automation · AI · Voice · API**
+**Human Governance · AI Workforce · Voice · CRM · Finance · Operations · Automation · API**
 
-> 🚧 OpenBiz Box is currently in early development. The architecture and first Business Packs are being defined before the runnable MVP lands.
+> 🚧 Early development. The platform architecture, governance model and first Business Packs are being built toward a runnable MVP.
 
 </div>
 
@@ -18,104 +18,179 @@ An open-source, self-hostable business operating platform that brings together t
 
 ## 💡 What is OpenBiz Box?
 
-Small businesses shouldn't need dozens of disconnected SaaS subscriptions just to operate.
+Small businesses shouldn't need dozens of disconnected SaaS subscriptions — or an ungoverned AI with master credentials to all of them.
 
-OpenBiz Box turns proven open-source applications into **one integrated business platform**. Identity, automation, observability, AI and voice form the common foundation; Business Packs then configure the platform for different kinds of organisations.
+OpenBiz Box combines proven open-source business applications with an **AI Workforce, Governance Engine, durable workflows, real-time voice and a permission-aware Tool Gateway**.
 
-The goal is simple:
+The operating principle is:
+
+> **Agents operate the business. Humans govern the business.**
 
 ```text
-Clone → Configure → Choose your Business Pack → Deploy → Run your business
+                    👤 HUMAN GOVERNANCE
+               Goals · Policy · Approvals
+                          │
+                          ▼
+                    🧠 AI WORKFORCE
+       Chief of Staff · Sales · Finance · Operations
+          Support · Marketing · Procurement · IT
+                          │
+                          ▼
+                    ⚖️ GOVERNANCE
+          Identity · Delegation · Budgets · Audit
+                          │
+                          ▼
+                    🔄 ORCHESTRATION
+                      Temporal + n8n
+                          │
+                          ▼
+                    🔌 TOOL GATEWAY
+                          │
+                          ▼
+                    🗄️ BUSINESS SYSTEMS
+       ERPNext · Chatwoot · Nextcloud · Cal.com · more
 ```
 
-OpenBiz is not intended to hide open source behind a new monolith. Applications remain modular and replaceable while the OpenBiz control plane provides the common operating experience.
+## 👥 AI staff, not one super-agent
 
-## ✨ One business. Four interfaces.
+OpenBiz gives specialist agents separate identities, jobs, permissions, budgets and audit histories.
+
+Initial workforce:
+
+| AI staff member | Role |
+|---|---|
+| 🧭 **Chief of Staff** | Management briefings, prioritisation and delegation |
+| 💼 **Sales Agent** | Leads, CRM, quotes, scheduling and sales follow-up |
+| 💰 **Finance Agent** | Receivables, finance monitoring and payment proposals |
+| ⚙️ **Operations Agent** | Projects, delivery, workload and exceptions |
+| 🎧 **Support Agent** | Customer triage, knowledge and routine support |
+| 📣 **Marketing Agent** | Campaign and content preparation |
+| 🛒 **Procurement Agent** | Supplier and purchasing preparation |
+| 🛡️ **IT & Security Agent** | Platform health, security events and remediation proposals |
+
+See [`agents/workforce.yaml`](agents/workforce.yaml) for the initial machine-readable workforce definition.
+
+## 👤 Humans remain in control
+
+Every governed action can be configured as:
+
+| Mode | Behaviour |
+|---|---|
+| **AUTO** | Agent may execute |
+| **NOTIFY** | Agent executes and informs a human |
+| **APPROVE** | Agent prepares the action and waits for approval |
+| **HUMAN** | Human must perform the action |
+| **DENY** | Agent is prohibited from the capability |
+
+Policies can include limits such as monetary value, discount percentage, customer, data sensitivity, cumulative budget and approver role.
+
+```text
+Finance Agent
+────────────────────────────────────
+Supplier payment INV-3941
+Amount: $4,820
+Reason: Approved supplier invoice due today
+Policy: Payments > $2,500 require approval
+
+        [Approve] [Reject] [Modify] [Ask Agent]
+```
+
+The initial policy model lives in [`governance/policies.yaml`](governance/policies.yaml).
+
+## 🎙️ Manage the business by voice
+
+**LiveKit + LiveKit Agents** are the planned real-time voice foundation.
+
+> “OpenBiz, give me today's management briefing.”
+>
+> “There are four items requiring your approval. Sales has a proposal ready, Finance has two supplier payments, and Operations has flagged a project at risk.”
+>
+> “Let's deal with the project first.”
+
+Voice, chat and workflow agents all call the **same governed OpenBiz tools**. Voice never becomes a shortcut around permissions.
+
+Planned voice stack:
+
+- LiveKit Server + LiveKit Agents
+- faster-whisper local STT option
+- Kokoro / Piper local TTS options
+- LiteLLM model routing
+- browser/mobile WebRTC
+- future SIP AI phone agents
+
+## 🔄 Durable business processes
+
+OpenBiz separates AI reasoning from authoritative workflow state.
+
+**Temporal** is planned for important long-running processes involving approvals, waits, retries, deadlines and compensation. **n8n** remains the integration and straightforward automation layer.
+
+```text
+Sales Agent prepares proposal
+          ↓
+Human approval if required
+          ↓
+Customer accepts
+          ↓
+Contract prepared
+          ↓
+WAIT for signature
+          ↓
+Finance setup
+          ↓
+Operations project
+          ↓
+Customer onboarding
+```
+
+An LLM conversation is never the database for a three-week business process.
+
+## 📊 Measure your AI workforce
+
+OpenBiz is designed to meter AI cost and business outcomes per agent.
+
+```text
+Sales Agent
+────────────────────────
+AI cost this month       $37.82
+Leads processed              483
+Meetings booked               31
+Quotes prepared               18
+Approvals requested            4
+Revenue influenced        $42,300
+```
+
+Each agent can have a monthly AI budget, preferred/fallback models and workload limits.
+
+## ✨ Four human interfaces
 
 | Interface | What it provides |
 |---|---|
-| 🖥️ **Web** | Control plane, dashboards and business applications |
-| 💬 **Chat** | Conversational access to business information and agents |
-| 🎙️ **Voice** | Real-time voice conversations that can query and operate the business |
-| 🔌 **API** | Automation, integrations, events and external systems |
-
-## 🧠 Talk to your business
-
-Voice is not an afterthought in OpenBiz Box. **LiveKit + LiveKit Agents** are the planned real-time voice foundation, supporting browser/mobile WebRTC and a future SIP/telephone interface.
-
-```text
-                🎙️ YOU
-                   │
-                   ▼
-          ┌─────────────────┐
-          │     LiveKit     │
-          │ Realtime Voice  │
-          └────────┬────────┘
-                   │
-       ┌───────────┼───────────┐
-       ▼           ▼           ▼
-      STT         Agent        TTS
- faster-whisper  LiteLLM   Kokoro / Piper
-                   │
-                   ▼
-          OpenBiz Tool Gateway
-                   │
-      ┌────────────┼────────────┐
-      ▼            ▼            ▼
-   ERP/CRM       Support    Automation
-   ERPNext       Chatwoot       n8n
-```
-
-Ask things like:
-
-> **“Give me my morning business briefing.”**
->
-> **“Which invoices are more than 30 days overdue?”**
->
-> **“Draft follow-up emails and read the first one to me.”**
->
-> **“What support tickets need attention?”**
->
-> **“Create a quote for this customer.”**
->
-> **“Which customer backups failed overnight?”**
-
-Read-only requests can be frictionless. Sensitive actions such as sending communications, deleting records or approving transactions can require explicit policy and confirmation before execution.
-
-### Planned voice stack
-
-- **LiveKit Server** — real-time WebRTC media infrastructure
-- **LiveKit Agents** — conversational voice-agent runtime
-- **faster-whisper** — local speech-to-text option
-- **Kokoro / Piper** — local text-to-speech options
-- **LiteLLM** — pluggable local/cloud LLM routing
-- **OpenBiz Tool Gateway** — permission-aware business actions
-- **SIP** — future inbound/outbound AI phone agents
-
-Providers remain interchangeable so an organisation can favour fully local processing or selected cloud services.
+| 🖥️ **Web** | Control Plane, Approval Inbox, dashboards and apps |
+| 💬 **Chat** | Management and specialist-agent conversations |
+| 🎙️ **Voice** | Real-time conversations, briefings and governed actions |
+| 🔌 **API** | Integrations, events and external systems |
 
 ## 🧩 OpenBiz Core
-
-Every Business Pack builds on a common platform foundation.
 
 | Area | Planned foundation |
 |---|---|
 | 🚪 Ingress | Traefik |
-| 🔐 Identity | Authentik |
-| 📦 Containers | Docker / Compose + Portainer |
-| 🛡️ Security | CrowdSec |
-| ⚡ Automation | n8n |
-| 📈 Monitoring | Uptime Kuma + Prometheus + Grafana |
-| 📜 Logging | Loki |
-| 💾 Backup | Restic + Backrest |
+| 🔐 Human Identity | Authentik |
+| 👥 AI Workforce | OpenBiz Agent Runtime abstraction |
+| ⚖️ Governance | OpenBiz Governance Engine |
+| 🔌 Business Actions | OpenBiz Tool Gateway |
+| 🔄 Durable Workflows | Temporal |
+| ⚡ Integration Automation | n8n |
 | 🤖 AI Gateway | LiteLLM |
 | 🧠 Knowledge / RAG | Qdrant |
 | 🎙️ Voice | LiveKit + LiveKit Agents |
+| 📈 Operations | Uptime Kuma + Prometheus + Grafana + Loki |
+| 💾 Backup | Restic + Backrest |
 | 🧭 Experience | OpenBiz Control Plane |
 
-## 🏢 Business capability catalogue
+## 🏢 Systems of record
 
-OpenBiz Business Packs select from a catalogue of replaceable capabilities rather than hard-coding one application for everything.
+The AI workforce operates modular business applications through governed adapters rather than receiving unrestricted credentials.
 
 | Capability | Initial choice |
 |---|---|
@@ -135,148 +210,92 @@ OpenBiz Business Packs select from a catalogue of replaceable capabilities rathe
 
 ## 📦 Business Packs
 
-A Business Pack is more than a Compose profile. It defines the **applications, roles, workflows, dashboards, templates, policies and AI agents** needed for a particular operating model.
+Business Packs define applications, workflows, AI staff, permissions, dashboards, templates and policies for an operating model.
 
-### 🏪 General Small Business
+- 🏪 **General Small Business** — baseline commercial and operational environment
+- 💼 **Professional Services** — projects, quotes, contracts, time and delivery
+- 🛠️ **MSP / IT Provider** — service desk, RMM, security, SLAs and managed-service operations
 
-The baseline business operating environment: customers, CRM, finance, documents, knowledge, scheduling, signatures, communications, automation, AI and voice.
+Future packs can include Trades, Retail, E-commerce, Clubs/NFP and Manufacturing.
 
-### 💼 Professional Services
+## 🔐 Safety by architecture
 
-Projects, customers, quotations, contracts, time, delivery workflows, invoicing and knowledge — designed for consulting and service businesses.
+OpenBiz is designed around least privilege rather than hoping the model behaves correctly.
 
-### 🛠️ MSP / IT Provider
+- separate service identity per AI staff member
+- no universal agent credential
+- capability-level permissions
+- financial and AI-spend budgets
+- policy checks before tools execute
+- durable human approvals
+- complete audit trail
+- global and per-agent kill switches
+- secrets outside source control
 
-Extends OpenBiz into an MSP operating platform with service desk, RMM, remote access, security monitoring, infrastructure inventory, customer environments, SLAs and managed-service reporting.
-
-Future packs can include **Trades · Retail · E-commerce · Clubs/NFP · Manufacturing** and others.
-
-## 🤖 AI is infrastructure, not a plugin
-
-OpenBiz agents will use the same business capability layer whether the request comes from chat, voice, an automation or an API call.
-
-```text
-                 OpenBiz Agent Layer
-                         │
-        ┌────────────────┼────────────────┐
-        ▼                ▼                ▼
-      Chat             Voice          Automation
-        │                │                │
-        └────────────────┼────────────────┘
-                         ▼
-                OpenBiz Tool Gateway
-                         │
-                Identity + Policy
-                         │
-       ┌─────────┬───────┼───────┬─────────┐
-       ▼         ▼       ▼       ▼         ▼
-      CRM      Finance  Docs   Support   Projects
-```
-
-Every privileged action should be attributable to an authenticated user or service identity and recorded for audit.
-
-## 🏗️ Architecture
-
-```text
- Users · Customers · Administrators
-                 │
-      ┌──────────┼──────────┐
-      ▼          ▼          ▼
-     Web        Chat       Voice
-      └──────────┼──────────┘
-                 ▼
-       OpenBiz Control Plane
-                 │
-    ┌────────────┼────────────┐
-    ▼            ▼            ▼
- Identity    Automation    AI / Agents
- Authentik       n8n      LiteLLM / RAG
-    └────────────┼────────────┘
-                 ▼
-       Business Capabilities
-                 │
-   CRM · Finance · Docs · Support
-   Projects · Assets · Scheduling
-```
-
-See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the deeper architecture direction.
+See [`docs/AI-WORKFORCE.md`](docs/AI-WORKFORCE.md), [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) and [`docs/SECRETS.md`](docs/SECRETS.md).
 
 ## 🗂️ Repository direction
 
 ```text
 openbiz-box/
-├── control-plane/       # Unified OpenBiz UI/API
+├── control-plane/       # Dashboard, Approval Inbox, management UI/API
 ├── core/                # Shared platform services
-├── workloads/           # Application/module definitions
-├── packs/
-│   ├── general-business/
-│   ├── professional-services/
-│   └── msp/
-├── agents/              # Business agents and tools
+├── governance/          # Delegation, approval and budget policies
+├── agents/              # AI workforce definitions/runtime adapters
+├── workflows/           # Temporal + n8n workflows
+├── tools/               # Governed capability/tool adapters
 ├── voice/               # LiveKit voice runtime
-├── workflows/           # n8n/OpenBiz workflows
+├── workloads/           # Application/module definitions
+├── packs/               # Business operating models
 ├── integrations/        # External connectors
 ├── templates/           # Business templates
 ├── docs/
-└── deploy/              # Compose/deployment assets
+└── deploy/
 ```
-
-## 🔐 Design principles
-
-1. **Open-source first** — favour software businesses can inspect and operate.
-2. **Self-hostable by default** — cloud services are options, not requirements.
-3. **Modular** — business applications remain replaceable.
-4. **Identity first** — central SSO and MFA wherever applications support it.
-5. **API/event driven** — avoid fragile point-to-point integration.
-6. **AI with boundaries** — agents inherit identity, policy and audit requirements.
-7. **Voice = Chat = API** — all interfaces use the same capability and security layer.
-8. **Operations included** — monitoring, backup and restore are part of the product.
-9. **Business outcomes over containers** — users select what their business needs, not Docker images.
-10. **Keep SMB deployment understandable** — Kubernetes is not a prerequisite.
 
 ## 🗺️ MVP target
 
-The first meaningful release should deliver this experience:
-
-```bash
-git clone <openbiz-box>
-cd OpenBiz-Box
-cp .env.example .env
-docker compose up -d
+```text
+Clone → Configure → Deploy → Select Business Pack
+                     ↓
+              Create AI Workforce
+                     ↓
+           Set Delegation & Budgets
+                     ↓
+               Start Business
+                     ↓
+         Human manages by exception
 ```
-
-Then:
-
-**Open setup wizard → configure business → select Business Pack → provision workloads → sign in → talk to OpenBiz.**
 
 ### MVP workstreams
 
 - [ ] OpenBiz Control Plane
-- [ ] Setup wizard
-- [ ] Workload/module manifest specification
-- [ ] Compose generator
+- [ ] Approval Inbox
+- [ ] Governance Engine
+- [ ] AI workforce identity/runtime
+- [ ] Tool Gateway
+- [ ] Temporal durable workflows
+- [ ] n8n integration foundation
 - [ ] Authentik SSO bootstrap
-- [ ] Core observability
-- [ ] Backup/restore framework
-- [ ] n8n automation foundation
 - [ ] LiteLLM + Qdrant AI foundation
-- [ ] LiveKit voice foundation
-- [ ] Permission-aware Tool Gateway
-- [ ] General Business Pack deployment
-- [ ] MSP Pack foundation
+- [ ] LiveKit voice agent
+- [ ] Workload/module specification
+- [ ] Business Pack installer
+- [ ] AI budget/cost metering
+- [ ] Audit/event ledger
+- [ ] Kill switches
+- [ ] General Business Pack
+- [ ] MSP Pack
+- [ ] Backup/restore and observability
 - [ ] CI / validation / upgrade strategy
 
-## 🌱 Project status
+## 🌱 Status
 
-**Early development / architecture bootstrap.**
-
-The repository currently contains the product direction, architecture and initial Business Pack definitions. The next milestone is the first runnable OpenBiz Core.
-
-Contributions, architecture discussion and experimentation will become increasingly useful as the workload specification stabilises.
+**Early development / architecture bootstrap.** A runnable infrastructure scaffold now exists, but OpenBiz is not yet a production autonomous-business platform. The next implementation milestone is the Governance Engine + Approval Inbox + Tool Gateway + first AI staff runtime.
 
 ## ⚖️ Licensing
 
-OpenBiz Box's own license is still to be selected. Third-party applications retain their respective licenses. The licensing model will be reviewed before the first distributable release.
+OpenBiz Box's own license is still to be selected. Third-party applications retain their respective licenses. Licensing will be reviewed before the first distributable release.
 
 ---
 
@@ -284,6 +303,6 @@ OpenBiz Box's own license is still to be selected. Third-party applications reta
 
 ### 📦 OpenBiz Box
 
-**Run your business. Own your stack. Talk to your business.**
+**Agents operate the business. Humans govern the business.**
 
 </div>
