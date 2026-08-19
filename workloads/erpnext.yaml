@@ -1,0 +1,24 @@
+apiVersion: openbiz.io/v1alpha1
+kind: Workload
+metadata:
+  name: erpnext
+  displayName: ERPNext
+spec:
+  capabilities: [crm, finance, inventory, sales]
+  category: business-core
+  deployment:
+    type: compose-module
+    status: planned
+  integration:
+    sso: oidc-proxy
+    api: true
+    webhooks: true
+  backup:
+    required: true
+    includes: [database, sites, files]
+  tools:
+    - customer.search
+    - invoice.list_overdue
+    - quote.create
+  health:
+    path: /api/method/ping
