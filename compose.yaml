@@ -27,6 +27,37 @@ services:
     ports: ["80:80","443:443"]
     volumes: ["/var/run/docker.sock:/var/run/docker.sock:ro"]
     networks: [edge]
+  authentik-server:
+    image: ghcr.io/goauthentik/server:${AUTHENTIK_TAG:-2026.5}
+    restart: unless-stopped
+    command: server
+    environment: &authentik_env
+      AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY}
+      AUTHENTIK_REDIS__HOST: redis
+      AUTHENTIK_REDIS__PASSWORD: ${REDIS_PASSWORD}
+      AUTHENTIK_POSTGRESQL__HOST: postgres
+      AUTHENTIK_POSTGRESQL__USER: ${POSTGRES_USER:-openbiz}
+      AUTHENTIK_POSTGRESQL__NAME: ${POSTGRES_DB:-openbiz}
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${POSTGRES_PASSWORD}
+    depends_on:
+      postgres: {condition: service_healthy}
+    networks: [edge,backend]
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.authentik.rule=Host(`auth.${OPENBIZ_DOMAIN}`)
+      - traefik.http.routers.authentik.entrypoints=web
+      - traefik.http.services.authentik.loadbalancer.server.port=9000
+  authentik-worker:
+    image: ghcr.io/goauthentik/server:${AUTHENTIK_TAG:-2026.5}
+    restart: unless-stopped
+    command: worker
+    environment:
+      <<: *authentik_env
+      AUTHENTIK_BOOTSTRAP_PASSWORD_HASH: ${AUTHENTIK_BOOTSTRAP_PASSWORD_HASH:-}
+    depends_on:
+      postgres: {condition: service_healthy}
+    networks: [backend]
+    volumes: [authentik_media:/media,authentik_templates:/templates]
   control-plane:
     build: ./control-plane
     restart: unless-stopped
@@ -34,6 +65,7 @@ services:
       OPENBIZ_TOOL_GATEWAY_URL: http://tool-gateway:8080
       OPENBIZ_LITELLM_URL: http://litellm:4000
       OPENBIZ_LIVEKIT_URL: ${LIVEKIT_PUBLIC_URL:-ws://localhost:7880}
+      OPENBIZ_AUTH_URL: http://authentik-server:9000
     networks: [edge,backend]
     labels:
       - traefik.enable=true
@@ -107,6 +139,19 @@ services:
     volumes: ["./voice/livekit.yaml:/etc/livekit.yaml:ro"]
     ports: ["7880:7880","7881:7881","50000-50100:50000-50100/udp"]
     networks: [edge,backend]
+  voice-agent:
+    build: ./voice/agent
+    restart: unless-stopped
+    environment:
+      LIVEKIT_URL: ${LIVEKIT_URL:-ws://livekit:7880}
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET}
+      OPENBIZ_LITELLM_URL: http://litellm:4000/v1
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
+      OPENBIZ_TOOL_GATEWAY_URL: http://tool-gateway:8080
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    depends_on: [livekit,litellm,tool-gateway]
+    networks: [backend]
 networks:
   edge:
   backend: {internal: true}
@@ -117,3 +162,5 @@ volumes:
   n8n_data:
   qdrant_data:
   ollama_data:
+  authentik_media:
+  authentik_templates:
