@@ -1,0 +1,114 @@
+name: Deploy OpenBiz Box
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "compose.yaml"
+      - "core/**"
+      - "voice/**"
+      - "deploy/**"
+      - ".github/workflows/deploy.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: openbiz-production
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create validation environment
+        shell: bash
+        run: |
+          cat > .env <<'EOF'
+          OPENBIZ_DOMAIN=example.invalid
+          POSTGRES_PASSWORD=validation-only
+          REDIS_PASSWORD=validation-only
+          N8N_HOST=automation.example.invalid
+          N8N_ENCRYPTION_KEY=validation-only
+          LITELLM_MASTER_KEY=validation-only
+          QDRANT_API_KEY=validation-only
+          LIVEKIT_API_KEY=validation
+          LIVEKIT_API_SECRET=validation-only
+          EOF
+      - name: Validate Compose
+        run: docker compose config --quiet
+
+  deploy:
+    needs: validate
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_HOST_KEY: ${{ secrets.DEPLOY_HOST_KEY }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$DEPLOY_HOST_KEY" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Create runtime environment
+        env:
+          OPENBIZ_DOMAIN: ${{ vars.OPENBIZ_DOMAIN }}
+          N8N_HOST: ${{ vars.N8N_HOST }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+          N8N_ENCRYPTION_KEY: ${{ secrets.N8N_ENCRYPTION_KEY }}
+          LITELLM_MASTER_KEY: ${{ secrets.LITELLM_MASTER_KEY }}
+          QDRANT_API_KEY: ${{ secrets.QDRANT_API_KEY }}
+          LIVEKIT_API_KEY: ${{ secrets.LIVEKIT_API_KEY }}
+          LIVEKIT_API_SECRET: ${{ secrets.LIVEKIT_API_SECRET }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          umask 077
+          cat > .env.runtime <<EOF
+          OPENBIZ_DOMAIN=${OPENBIZ_DOMAIN}
+          N8N_HOST=${N8N_HOST}
+          POSTGRES_USER=openbiz
+          POSTGRES_DB=openbiz
+          POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+          REDIS_PASSWORD=${REDIS_PASSWORD}
+          N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+          LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY}
+          QDRANT_API_KEY=${QDRANT_API_KEY}
+          LIVEKIT_API_KEY=${LIVEKIT_API_KEY}
+          LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET}
+          OPENAI_API_KEY=${OPENAI_API_KEY}
+          ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+          EOF
+
+      - name: Copy deployment files
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          ssh "$DEPLOY_USER@$DEPLOY_HOST" 'mkdir -p ~/openbiz-box/core/ai ~/openbiz-box/voice'
+          scp compose.yaml "$DEPLOY_USER@$DEPLOY_HOST:~/openbiz-box/compose.yaml"
+          scp core/ai/litellm-config.yaml "$DEPLOY_USER@$DEPLOY_HOST:~/openbiz-box/core/ai/litellm-config.yaml"
+          scp voice/livekit.yaml "$DEPLOY_USER@$DEPLOY_HOST:~/openbiz-box/voice/livekit.yaml"
+          scp .env.runtime "$DEPLOY_USER@$DEPLOY_HOST:~/openbiz-box/.env"
+
+      - name: Deploy
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          ssh "$DEPLOY_USER@$DEPLOY_HOST" 'cd ~/openbiz-box && chmod 600 .env && docker compose pull && docker compose up -d --remove-orphans && docker compose ps'
+
+      - name: Remove local runtime environment
+        if: always()
+        run: rm -f .env.runtime
