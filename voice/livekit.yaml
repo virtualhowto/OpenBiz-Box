@@ -6,7 +6,8 @@ rtc:
   port_range_start: 50000
   port_range_end: 50100
   use_external_ip: false
-keys:
-  openbiz-dev: CHANGE_ME_LONG_RANDOM_VALUE
 logging:
   level: info
+
+# LiveKit credentials are injected at runtime via LIVEKIT_KEYS.
+# Do not place API secrets in this tracked file.
