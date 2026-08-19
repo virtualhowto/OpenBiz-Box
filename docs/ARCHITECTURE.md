@@ -1,256 +1,264 @@
 # OpenBiz Box Architecture
 
+## North Star
+
+OpenBiz Box is a **human-governed autonomous business platform**. Open-source business applications remain the systems of record, while AI staff operate those systems through controlled tools, durable workflows and explicit human governance.
+
+```text
+                    HUMAN GOVERNANCE
+              Goals · Policy · Approval · Exceptions
+                             |
+                             v
+                       AI WORKFORCE
+       Chief of Staff · Sales · Finance · Ops · Support · IT
+                             |
+                             v
+                    GOVERNANCE ENGINE
+       Identity · Delegation · Budgets · Approval · Audit
+                             |
+                             v
+                  PROCESS ORCHESTRATION
+                       Temporal + n8n
+                             |
+                             v
+                    OPENBIZ TOOL GATEWAY
+                             |
+                             v
+                     SYSTEMS OF RECORD
+       ERPNext · Chatwoot · Nextcloud · Cal.com · Documenso
+```
+
+Humans retain authority. Agents can research, propose, prepare and execute only within their delegated permissions.
+
 ## Product Layers
 
-OpenBiz Box is organised into four primary layers.
-
 ### 1. Platform Core
-
-Provides infrastructure shared by every business pack:
 
 - ingress and TLS
 - identity and SSO
 - secrets
 - networking
-- backups
-- monitoring
-- logging
-- automation/event bus
-- AI gateway
-- **LiveKit real-time voice infrastructure**
+- backup and restore
+- monitoring and logging
+- event/integration automation
+- AI gateway and RAG
+- LiveKit real-time voice
+- Temporal durable workflow engine
 - OpenBiz Tool Gateway
 
-### 2. Business Capability Modules
+### 2. Governance Plane
 
-Applications are registered as modules providing capabilities such as CRM, finance, documents, support, projects, scheduling, signatures and assets.
+The governance plane determines what a human, service or AI staff member may do.
 
-A module should declare:
+Every governed action is assigned one of five modes:
 
-- capability IDs
-- container/deployment definition
-- dependencies
-- SSO support
-- backup requirements
-- health checks
-- API endpoints
-- events/webhooks
-- agent tools
-- configuration schema
+- `auto` — execute without approval
+- `notify` — execute and notify the relevant human
+- `approve` — prepare/propose and wait for human approval
+- `human` — human execution only
+- `deny` — prohibited for the identity
 
-### 3. Business Packs
+Policies can additionally constrain:
 
-A pack selects modules and configures them for an operating model.
+- monetary amount
+- discount percentage
+- customer/account
+- data sensitivity
+- time window
+- tool/application
+- transaction type
+- cumulative budget
+- model/token spend
+- approver role
 
-A pack can provide:
+Every action should produce an immutable audit event containing identity, tenant, capability, policy decision, arguments, approval state, execution result and correlation ID.
 
-- required and optional workloads
-- roles
-- dashboards
-- workflows
-- templates
-- AI agents
-- knowledge collections
-- policies
-- default integrations
-- voice intents and permissions
+### 3. AI Workforce
 
-### 4. Experience Layer
+Agents are first-class workforce identities, not one shared super-user.
 
-Users should not need to understand which underlying application implements a capability.
+Initial roles:
 
-OpenBiz exposes capabilities through:
+- `agent.chief-of-staff`
+- `agent.sales`
+- `agent.finance`
+- `agent.operations`
+- `agent.support`
+- `agent.marketing`
+- `agent.procurement`
+- `agent.it-security`
 
-- Control Plane UI
-- unified search
-- AI chat
-- real-time Voice AI
-- future SIP/telephone agent
-- API
-- event/webhook interface
+Each agent has:
 
-## Core Logical Architecture
+- service identity
+- job description
+- objectives
+- tools
+- data scope
+- delegation policy
+- human escalation path
+- monthly AI budget
+- preferred/fallback models
+- memory/knowledge scope
+- audit history
+- business KPIs
+
+The Agent Runtime interface should avoid hard coupling OpenBiz to one framework. LangGraph, CrewAI or future runtimes can be adapters behind the OpenBiz agent contract.
+
+### 4. Process Orchestration
+
+OpenBiz separates reasoning from durable business process state.
+
+**Temporal** owns important, long-running workflows: approvals, waiting, retries, compensation, timers and process state.
+
+**n8n** handles integrations, webhooks and straightforward automation.
+
+An LLM should never be the database for a three-week business process.
+
+Example:
 
 ```text
-                    OPENBIZ BOX
-
- Browser        Mobile        Voice        API Client
-    |              |             |              |
-    +--------------+-------------+--------------+
-                           |
-                    OpenBiz Gateway
-                           |
-                  Authentik Identity
-                           |
-                 OpenBiz Control Plane
-                           |
-       +-------------------+-------------------+
-       |                   |                   |
- Automation Bus        Agent Runtime       Event Bus
-      n8n             LiteLLM / RAG         Webhooks
-       |                   |                   |
-       +-------------------+-------------------+
-                           |
-                  OpenBiz Tool Gateway
-                           |
-              Business Capability Layer
-                           |
-  +----------+----------+---------+---------+----------+
-  |          |          |         |         |          |
- CRM       Finance     Docs     Support   Projects    Assets
+Lead qualified
+   |
+Sales Agent drafts proposal
+   |
+Human approval if policy requires
+   |
+Customer accepts
+   |
+Contract Agent prepares agreement
+   |
+WAIT for signature
+   |
+Finance creates account/invoice state
+   |
+Operations creates project
+   |
+Customer Success begins onboarding
 ```
 
-## AI and Agent Security
+### 5. Tool / Capability Layer
 
-The agent runtime must not bypass application security simply because an LLM is calling a tool.
+Applications register capabilities with the OpenBiz Tool Gateway. Agents never receive unrestricted application credentials simply because they need a function.
 
-Each action should carry:
+A capability definition should declare:
 
-- authenticated user/service identity
-- tenant/business context
-- requested capability
-- authorisation decision
-- tool arguments
-- audit ID
-- result
+- capability ID
+- read/write classification
+- risk level
+- required identity claims
+- policy hooks
+- application adapter
+- argument schema
+- audit schema
+- idempotency behaviour
+- rollback/compensation support
 
-The Tool Gateway is the policy boundary between AI/automation interfaces and business applications.
+### 6. Systems of Record
+
+Business applications remain modular and replaceable. Initial systems include ERPNext, Nextcloud, Chatwoot, BookStack, Cal.com, Documenso, Kimai, Snipe-IT and other Business Pack workloads.
+
+### 7. Experience Layer
+
+Humans interact through:
+
+- OpenBiz Control Plane
+- approval inbox
+- management dashboard
+- AI chat
+- LiveKit real-time voice
+- future SIP/telephone interface
+- API and webhooks
+
+## Human Oversight
+
+Human oversight is a product feature, not an exception handler.
+
+The Control Plane should provide a unified **Approval Inbox** containing:
+
+- action requested
+- requesting AI staff member
+- business rationale
+- supporting evidence
+- financial/risk impact
+- proposed tool call
+- policy that triggered approval
+- approve / reject / modify / delegate actions
+
+Example:
+
+```text
+Finance Agent
+Supplier payment INV-3941
+Amount: $4,820
+Policy: payments > $2,500 require approval
+Status: WAITING FOR OWNER
+
+[Approve] [Reject] [Modify] [Ask Agent]
+```
+
+## AI Staff Cost and Performance
+
+OpenBiz should meter AI workforce cost and outcomes by agent.
+
+Example dashboard:
+
+```text
+Sales Agent
+AI cost this month       $37.82
+Leads processed              483
+Meetings booked               31
+Quotes prepared               18
+Approvals requested            4
+Revenue influenced        $42,300
+```
+
+This provides both cost control and evidence that an AI role is delivering useful work.
 
 ## Voice Architecture
 
-**LiveKit Server and LiveKit Agents are the planned real-time voice foundation for OpenBiz Box.**
-
-OpenBiz should not build its own WebRTC/media transport. LiveKit handles real-time media while the OpenBiz agent and Tool Gateway provide the business-specific intelligence and security model.
+LiveKit Server and LiveKit Agents remain the real-time voice foundation. Voice calls the same governed tools as chat and workflow agents.
 
 ```text
-Browser / Mobile microphone
-          |
-          | WebRTC
-          v
- +-------------------+
- |  LiveKit Server   |
- +---------+---------+
-           |
-           v
- +-------------------+
- | LiveKit Agents    |
- | Turn / session    |
- | Barge-in          |
- | Tool invocation   |
- +---------+---------+
-           |
-     +-----+------+----------------+
-     |            |                |
-     v            v                v
-    STT          LLM              TTS
-faster-whisper  LiteLLM      Kokoro / Piper
- / provider      |            / provider
-                 |
-                 v
-        OpenBiz Tool Gateway
-                 |
-        Identity + Policy
-                 |
-     +-----------+-----------+
-     |           |           |
-     v           v           v
-   ERPNext     Chatwoot      n8n
-```
-
-### Voice requirements
-
-The voice service should support:
-
-- streaming speech-to-text
-- streaming text-to-speech
-- low-latency conversational turns
-- voice activity / turn detection
-- interruption and barge-in
-- conversational context
-- business tool calling
-- identity propagation
-- policy checks before privileged actions
-- explicit confirmation policies
-- audit trails
-- local and cloud STT/TTS providers
-- local and cloud LLM providers
-- browser/mobile WebRTC
-- future SIP telephone integration
-
-### Voice deployment modes
-
-**Local-first**
-
-```text
-LiveKit → faster-whisper → local LLM → Kokoro/Piper
-```
-
-**Hybrid**
-
-```text
-LiveKit → cloud/local STT → LiteLLM provider → cloud/local TTS
-```
-
-**Telephone agent (future)**
-
-```text
-PSTN / SIP provider
-       |
-       v
-LiveKit SIP
-       |
-       v
-OpenBiz Voice Agent
-       |
-       v
+Human voice
+   |
+LiveKit / STT
+   |
+Chief of Staff or specialist agent
+   |
+Governance Engine
+   |
 OpenBiz Tool Gateway
+   |
+Business systems / Temporal workflows
+   |
+TTS
+   |
+Spoken response
 ```
 
-Business Packs define the voice capabilities exposed to users. For example, the General Business pack may expose invoices, appointments and customer communications while the MSP pack adds incidents, customer health, backup status and NOC briefings.
+A management conversation can therefore surface approvals and delegate work without bypassing policy.
 
 ## Multi-Tenancy
 
-The first release should optimise for one business per OpenBiz deployment while keeping tenant IDs in the control-plane domain model.
-
-The MSP pack can then add management of many customer environments without requiring every third-party workload to be safely multi-tenant inside a single instance.
-
-This favours isolation:
-
-```text
-MSP Control Plane
-      |
- +----+----+----+
- |         |    |
-Cust A   Cust B Cust C
-Stack    Stack  Stack
-```
+The first release optimises for one business per OpenBiz deployment while retaining tenant IDs throughout the control-plane domain model. MSP deployments can manage isolated customer stacks from a higher-level control plane.
 
 ## Security Principles
 
-- zero implicit trust between workloads
-- SSO wherever supported
-- MFA at the identity layer
+- humans retain ultimate delegated authority
+- no shared omnipotent AI identity
+- least-privilege service identities per agent
+- SSO/MFA for human users
 - secrets never committed to Git
-- least-privilege service accounts
-- agent actions audited
-- privileged AI/voice actions require policy checks
-- confirmation required where policy dictates
-- public exposure kept to required services only
-- encrypted backups
-- tested restore procedures
+- tool access mediated through policy
+- privileged actions audited
+- approval required where policy dictates
+- financial and AI-spend budgets enforced
+- public exposure limited to required services
+- encrypted backups and tested restore procedures
 
 ## Deployment Targets
 
-Initial target:
+Initial target: single Linux Docker host.
 
-- single Linux Docker host
-
-Planned targets:
-
-- Docker Compose
-- multi-host Docker
-- remote GPU/AI worker
-- cloud VM
-- on-prem appliance
-- MSP-managed customer node
-
-Kubernetes should not be required for a normal small-business deployment.
+Planned targets include Docker Compose, multi-host Docker, remote GPU/AI workers, cloud VMs, on-prem appliances and MSP-managed customer nodes. Kubernetes is not required for a normal small-business deployment.
